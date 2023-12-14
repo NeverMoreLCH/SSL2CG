@@ -1,0 +1,135 @@
+WORKERS: 4
+
+MODEL_DIR: ./logs/exp1
+LOG_DIR: ./logs/exp1
+
+DATASET:
+  NAME: charades
+  DATA_DIR: data/Charades-CG
+  VIS_INPUT_TYPE: 2D-TAN-i3d-finetuned_features
+  TXT_INPUT_TYPE: glove
+  NO_VAL: True
+  NO_TEST: False
+  INPUT_NUM_CLIPS: 64
+  OUTPUT_NUM_CLIPS: [64, 32, 16]
+  NUM_ANCHORS: [16, 16, 16]
+  TIME_UNIT: 0.64
+  SLIDING_WINDOW: True
+  SAMPLE:
+    NEG:
+      MASK_MODE: QorV
+      BATCH_WEIGHT: True
+      Q_PARAMS:
+        MASK_WORD_TYPE: RandM_NVJR
+        MASK_NUM: None
+        MASK_RATE: 0.5
+        MASK_STEP: None
+      V_PARAMS:
+        IN_GT_MASK_RATE: 1.0
+        OUT_GT_RATE: 0.5
+        OUT_GT_MASK_RATE: 0.5
+    POS:
+      MASK_MODE: QorV
+      BATCH_WEIGHT: True
+      Q_PARAMS:
+        MASK_WORD_TYPE: RandM_O
+        MASK_NUM: None
+        MASK_RATE: 0.5
+        MASK_STEP: None
+      V_PARAMS:
+        OUT_GT_RATE: 0.5
+        OUT_GT_MASK_RATE: 0.5
+        WEIGHT_TYPE: None
+
+CUDNN:
+  DETERMINISTIC: False
+  BENCHMARK: True
+
+OPTIM:
+  NAME: Adam
+  PARAMS:
+    LR: 0.0001
+
+TRAIN:
+  BATCH_SIZE: 32
+  MAX_EPOCH: 100
+  CONTINUE: False
+
+LOSS:
+  ORI:
+    NAME: bce_rescale_loss
+    PARAMS:
+      MIN_IOU: 0.5
+      MAX_IOU: 1.0
+      BIAS: 0.0
+      TEMPERATURE: 1.0
+  NEG:
+    NAME: ssl
+    PARAMS:
+      MIN_IOU: 0.5
+      MAX_IOU: 1.0
+      BIAS: 0.0
+      WEIGHT: 20
+  POS:
+    NAME: bce
+    PARAMS:
+      MIN_IOU: 0.5
+      MAX_IOU: 1.0
+      BIAS: 0.0
+      WEIGHT: 0.2
+  CONTRAST:
+    NAME: simple_contrast
+    PARAMS:
+      WEIGHT: 0.1
+
+TEST:
+  BATCH_SIZE: 32
+  RECALL: [1,5]
+  TIOU: [0.5,0.7]
+  NMS_THRESH: 0.49
+
+MODEL:
+  NAME: MultiScale_TAN
+  PARAMS:
+    NUM_SCALES: 3
+
+  CLIP_MODULE:
+    NAME: ClipAvgPool
+    PARAMS:
+      INPUT_SIZE: 1024
+      HIDDEN_SIZE: 512
+      KERNEL_SIZE: 1
+      STRIDE: 1
+
+  PROP_MODULE:
+    NAME: MultiScalePropMaxPool
+    PARAMS:
+      HIDDEN_SIZE: 512
+      NUM_LAYERS: [16, 8, 8]
+
+  FUSION_MODULE:
+    NAME: MulNormFusion
+    PARAMS:
+      HIDDEN_SIZE: 512
+      VIS_INPUT_SIZE: 512
+      TXT_INPUT_SIZE: 300
+      TXT_HIDDEN_SIZE: 512
+      TXT_ENCODER:
+        NAME: LSTM
+        NUM_LAYERS: 2
+        BIDIRECTIONAL: True
+
+  MAP_MODULE:
+    NAME: MapGatedConv
+    PARAMS:
+      INPUT_SIZE: 512
+      HIDDEN_SIZES: [512]
+      KERNEL_SIZES: [17]
+      STRIDES: [1]
+      PADDINGS: [8]
+      DILATIONS: [1]
+
+  PRED_MODULE:
+    NAME: ProposalHead
+    PARAMS:
+      INPUT_SIZE: 512
