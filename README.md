@@ -1,4 +1,4 @@
-# SSL2CG
+# Exploring the Effect of Primitives for Compositional Generalization in Vision-and-Language
 Implementation for the CVPR 2023 paper "[Exploring the Effect of Primitives for Compositional Generalization in Vision-and-Language](https://openaccess.thecvf.com/content/CVPR2023/papers/Li_Exploring_the_Effect_of_Primitives_for_Compositional_Generalization_in_Vision-and-Language_CVPR_2023_paper.pdf)"
 
 ## Prerequisites
